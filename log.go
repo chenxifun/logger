@@ -79,11 +79,12 @@ func Register(name string, log Logger) {
 }
 
 type loginfo struct {
-	Time    string
-	Level   string
-	Path    string
-	Name    string
-	Content string
+	Time       string
+	Level      string
+	Path       string
+	Name       string
+	Content    string
+	ExtendProp interface{}
 }
 
 type nameLogger struct {
@@ -100,6 +101,7 @@ type LocalLogger struct {
 	callDepth  int
 	timeFormat string
 	usePath    string
+	logConvert LogMsgConvert
 }
 
 func NewLogger(depth ...int) *LocalLogger {
@@ -206,8 +208,13 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 			}
 			continue
 		}
+		var msgStr string
+		if this.logConvert == nil {
+			msgStr = defaultLogConvert(when, msg) //when.Format(this.timeFormat) + " [" + msg.Level + "] " + "[" + msg.Path + "] " + msg.Content
+		} else {
+			msgStr = this.logConvert(when, msg)
+		}
 
-		msgStr := when.Format(this.timeFormat) + " [" + msg.Level + "] " + "[" + msg.Path + "] " + msg.Content
 		err := l.LogWrite(when, msgStr, level)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
@@ -215,7 +222,7 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 	}
 }
 
-func (this *LocalLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
+func (this *LocalLogger) writeMsg(data interface{}, logLevel int, msg string, v ...interface{}) error {
 	if !this.init {
 		this.SetLogger(AdapterConsole)
 	}
@@ -241,59 +248,60 @@ func (this *LocalLogger) writeMsg(logLevel int, msg string, v ...interface{}) er
 	msgSt.Content = msg
 	msgSt.Name = this.appName
 	msgSt.Time = when.Format(this.timeFormat)
+	msgSt.ExtendProp = data
 	this.writeToLoggers(when, msgSt, logLevel)
 
 	return nil
 }
 
-func (this *LocalLogger) Fatal(format string, args ...interface{}) {
-	this.Emer("###Exec Panic:"+format, args...)
+func (this *LocalLogger) Fatal(data interface{}, format string, args ...interface{}) {
+	this.Emer(data, "###Exec Panic:"+format, args...)
 	os.Exit(1)
 }
 
-func (this *LocalLogger) Panic(format string, args ...interface{}) {
-	this.Emer("###Exec Panic:"+format, args...)
+func (this *LocalLogger) Panic(data interface{}, format string, args ...interface{}) {
+	this.Emer(data, "###Exec Panic:"+format, args...)
 	panic(fmt.Sprintf(format, args...))
 }
 
 // Emer Log EMERGENCY level message.
-func (this *LocalLogger) Emer(format string, v ...interface{}) {
-	this.writeMsg(LevelEmergency, format, v...)
+func (this *LocalLogger) Emer(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelEmergency, format, v...)
 }
 
 // Alert Log ALERT level message.
-func (this *LocalLogger) Alert(format string, v ...interface{}) {
-	this.writeMsg(LevelAlert, format, v...)
+func (this *LocalLogger) Alert(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelAlert, format, v...)
 }
 
 // Crit Log CRITICAL level message.
-func (this *LocalLogger) Crit(format string, v ...interface{}) {
-	this.writeMsg(LevelCritical, format, v...)
+func (this *LocalLogger) Crit(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelCritical, format, v...)
 }
 
 // Error Log ERROR level message.
-func (this *LocalLogger) Error(format string, v ...interface{}) {
-	this.writeMsg(LevelError, format, v...)
+func (this *LocalLogger) Error(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelError, format, v...)
 }
 
 // Warn Log WARNING level message.
-func (this *LocalLogger) Warn(format string, v ...interface{}) {
-	this.writeMsg(LevelWarning, format, v...)
+func (this *LocalLogger) Warn(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelWarning, format, v...)
 }
 
 // Info Log INFO level message.
-func (this *LocalLogger) Info(format string, v ...interface{}) {
-	this.writeMsg(LevelInformational, format, v...)
+func (this *LocalLogger) Info(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelInformational, format, v...)
 }
 
 // Debug Log DEBUG level message.
-func (this *LocalLogger) Debug(format string, v ...interface{}) {
-	this.writeMsg(LevelDebug, format, v...)
+func (this *LocalLogger) Debug(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelDebug, format, v...)
 }
 
 // Trace Log TRAC level message.
-func (this *LocalLogger) Trace(format string, v ...interface{}) {
-	this.writeMsg(LevelTrace, format, v...)
+func (this *LocalLogger) Trace(data interface{}, format string, v ...interface{}) {
+	this.writeMsg(data, LevelTrace, format, v...)
 }
 
 func (this *LocalLogger) Close() {
@@ -392,7 +400,7 @@ func Fatal(f interface{}, v ...interface{}) {
 }
 
 // Emer logs a message at emergency level.
-func Emer(f interface{}, v ...interface{}) {
+func Emer(d interface{}, f interface{}, v ...interface{}) {
 	defaultLogger.Emer(formatLog(f, v...))
 }
 
@@ -431,13 +439,13 @@ func Trace(f interface{}, v ...interface{}) {
 	defaultLogger.Trace(formatLog(f, v...))
 }
 
-func formatLog(f interface{}, v ...interface{}) string {
+func formatLog(f interface{}, v ...interface{}) (interface{}, string) {
 	var msg string
 	switch f.(type) {
 	case string:
 		msg = f.(string)
 		if len(v) == 0 {
-			return msg
+			return nil, msg
 		}
 		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
 			//format string
@@ -448,11 +456,11 @@ func formatLog(f interface{}, v ...interface{}) string {
 	default:
 		msg = fmt.Sprint(f)
 		if len(v) == 0 {
-			return msg
+			return nil, msg
 		}
 		msg += strings.Repeat(" %v", len(v))
 	}
-	return fmt.Sprintf(msg, v...)
+	return nil, fmt.Sprintf(msg, v...)
 }
 
 func stringTrim(s string, cut string) string {
