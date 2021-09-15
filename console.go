@@ -36,6 +36,12 @@ type consoleLogger struct {
 	Level    string `json:"level"`
 	Colorful bool   `json:"color"`
 	LogLevel int
+
+	logConvert LogMsgConvert
+}
+
+func (c *consoleLogger) SetLogConvert(lc LogMsgConvert) {
+	c.logConvert = lc
 }
 
 func (c *consoleLogger) Init(jsonConfig string) error {
@@ -59,14 +65,17 @@ func (c *consoleLogger) Init(jsonConfig string) error {
 	return err
 }
 
-func (c *consoleLogger) LogWrite(when time.Time, msgText interface{}, level int) error {
+func (c *consoleLogger) LogWrite(when time.Time, msgText *loginfo, level int) error {
 	if level > c.LogLevel {
 		return nil
 	}
-	msg, ok := msgText.(string)
-	if !ok {
-		return nil
-	}
+
+	msg := c.logConvert(when, msgText)
+
+	//msg, ok := msgText.(string)
+	//if !ok {
+	//	return nil
+	//}
 	if c.Colorful {
 		msg = colors[level](msg)
 	}
@@ -86,7 +95,8 @@ func (c *consoleLogger) printlnConsole(when time.Time, msg string) {
 
 func init() {
 	Register(AdapterConsole, &consoleLogger{
-		LogLevel: LevelDebug,
-		Colorful: runtime.GOOS != "windows",
+		LogLevel:   LevelDebug,
+		Colorful:   runtime.GOOS != "windows",
+		logConvert: defaultLogConvert,
 	})
 }

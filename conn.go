@@ -42,15 +42,19 @@ func (c *connLogger) Init(jsonConfig string) error {
 	return nil
 }
 
-func (c *connLogger) LogWrite(when time.Time, msgText interface{}, level int) (err error) {
+func (c *connLogger) SetLogConvert(lc LogMsgConvert) {
+
+}
+
+func (c *connLogger) LogWrite(when time.Time, msg *loginfo, level int) (err error) {
 	if level > c.LogLevel {
 		return nil
 	}
 
-	msg, ok := msgText.(*loginfo)
-	if !ok {
-		return
-	}
+	//msg, ok := msgText.(*loginfo)
+	//if !ok {
+	//	return
+	//}
 
 	if c.needToConnectOnMsg() {
 		err = c.connect()

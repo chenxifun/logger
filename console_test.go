@@ -6,14 +6,14 @@ import (
 
 // Try each log level in decreasing order of priority.
 func testConsoleCalls(bl *LocalLogger) {
-	bl.Emer("emergency")
-	bl.Alert("alert")
-	bl.Crit("critical")
-	bl.Error("error")
-	bl.Warn("warning")
-	bl.Debug("notice")
-	bl.Info("informational")
-	bl.Trace("trace")
+	bl.Emer(nil, "emergency")
+	bl.Alert(nil, "alert")
+	bl.Crit(nil, "critical")
+	bl.Error(nil, "error")
+	bl.Warn(nil, "warning")
+	bl.Debug(nil, "notice")
+	bl.Info(nil, "informational")
+	bl.Trace(nil, "trace")
 }
 
 func TestConsole(t *testing.T) {

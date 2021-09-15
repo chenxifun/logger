@@ -17,15 +17,15 @@ func TestFilePermit(t *testing.T) {
 	"maxsize":1,
 	"append":true} `)
 
-	log.Trace("trace")
-	log.Debug("debug")
-	log.Info("info")
-	log.Debug("notice")
-	log.Warn("warning")
-	log.Error("error")
-	log.Alert("alert")
-	log.Crit("critical")
-	log.Emer("emergency")
+	log.Trace(nil, "trace")
+	log.Debug(nil, "debug")
+	log.Info(nil, "info")
+	log.Debug(nil, "notice")
+	log.Warn(nil, "warning")
+	log.Error(nil, "error")
+	log.Alert(nil, "alert")
+	log.Crit(nil, "critical")
+	log.Emer(nil, "emergency")
 
 	file, err := os.Stat("test.log")
 	if err != nil {
@@ -40,14 +40,14 @@ func TestFilePermit(t *testing.T) {
 func TestFileLine(t *testing.T) {
 	log := NewLogger()
 	log.SetLogger("file", `{"filename":"test2.log"}`)
-	log.Debug("debug")
-	log.Info("info")
-	log.Debug("debug")
-	log.Warn("warning")
-	log.Error("error")
-	log.Alert("alert")
-	log.Crit("critical")
-	log.Emer("emergency")
+	log.Debug(nil, "debug")
+	log.Info(nil, "info")
+	log.Debug(nil, "debug")
+	log.Warn(nil, "warning")
+	log.Error(nil, "error")
+	log.Alert(nil, "alert")
+	log.Crit(nil, "critical")
+	log.Emer(nil, "emergency")
 	f, err := os.Open("test.log")
 	if err != nil {
 		t.Fatal(err)
@@ -78,15 +78,15 @@ func TestFileSize(t *testing.T) {
 	"maxsize":1,
 	"append":true} `)
 	for i := 0; i < 3000; i++ {
-		log.Trace("trace")
-		log.Debug("debug")
-		log.Info("info")
-		log.Debug("notice")
-		log.Warn("warning")
-		log.Error("error")
-		log.Alert("alert")
-		log.Crit("critical")
-		log.Emer("emergency")
+		log.Trace(nil, "trace")
+		log.Debug(nil, "debug")
+		log.Info(nil, "info")
+		log.Debug(nil, "notice")
+		log.Warn(nil, "warning")
+		log.Error(nil, "error")
+		log.Alert(nil, "alert")
+		log.Crit(nil, "critical")
+		log.Emer(nil, "emergency")
 		time.Sleep(time.Millisecond * 10)
 	}
 	// 手动删
@@ -95,13 +95,13 @@ func TestFileSize(t *testing.T) {
 func TestFileByMaxLine(t *testing.T) {
 	log := NewLogger()
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
-	log.Debug("debug")
-	log.Info("info")
-	log.Warn("warning")
-	log.Error("error")
-	log.Alert("alert")
-	log.Crit("critical")
-	log.Emer("emergency")
+	log.Debug(nil, "debug")
+	log.Info(nil, "info")
+	log.Warn(nil, "warning")
+	log.Error(nil, "error")
+	log.Alert(nil, "alert")
+	log.Crit(nil, "critical")
+	log.Emer(nil, "emergency")
 	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
 	b, err := exists(rotateName)
 	if !b || err != nil {
@@ -152,7 +152,7 @@ func BenchmarkFile(b *testing.B) {
 	log := NewLogger()
 	log.SetLogger("file", `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
-		log.Debug("debug")
+		log.Debug(nil, "debug")
 	}
 	os.Remove("test4.log")
 }
@@ -161,7 +161,7 @@ func BenchmarkFileCallDepth(b *testing.B) {
 	log := NewLogger()
 	log.SetLogger("file", `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
-		log.Debug("debug")
+		log.Debug(nil, "debug")
 	}
 	os.Remove("test4.log")
 }
@@ -170,7 +170,7 @@ func BenchmarkFileOnGoroutine(b *testing.B) {
 	log := NewLogger()
 	log.SetLogger("file", `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
-		go log.Debug("debug")
+		go log.Debug(nil, "debug")
 	}
 	os.Remove("test4.log")
 }

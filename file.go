@@ -33,6 +33,12 @@ type fileLogger struct {
 	dailyOpenDate        int
 	dailyOpenTime        time.Time
 	fileNameOnly, suffix string
+
+	logConvert LogMsgConvert
+}
+
+func (c *fileLogger) SetLogConvert(lc LogMsgConvert) {
+	c.logConvert = lc
 }
 
 // Init file logger with json config.
@@ -79,11 +85,11 @@ func (f *fileLogger) needCreateFresh(size int, day int) bool {
 }
 
 // WriteMsg write logger message into file.
-func (f *fileLogger) LogWrite(when time.Time, msgText interface{}, level int) error {
-	msg, ok := msgText.(string)
-	if !ok {
-		return nil
-	}
+func (f *fileLogger) LogWrite(when time.Time, msgText *loginfo, level int) error {
+	msg := f.logConvert(when, msgText) //  msgText.(string)
+	//if !ok {
+	//	return nil
+	//}
 	if level > f.LogLevel {
 		return nil
 	}
@@ -282,5 +288,6 @@ func init() {
 		PermitMask: "0777",
 		MaxLines:   10,
 		MaxSize:    10 * 1024 * 1024,
+		logConvert: defaultLogConvert,
 	})
 }

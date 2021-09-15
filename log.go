@@ -63,8 +63,9 @@ const (
 // log provider interface
 type Logger interface {
 	Init(config string) error
-	LogWrite(when time.Time, msg interface{}, level int) error
+	LogWrite(when time.Time, msg *loginfo, level int) error
 	Destroy()
+	SetLogConvert(c LogMsgConvert)
 }
 
 // 日志输出适配器注册，log需要实现Init，LogWrite，Destroy方法
@@ -208,14 +209,14 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 			}
 			continue
 		}
-		var msgStr string
-		if this.logConvert == nil {
-			msgStr = defaultLogConvert(when, msg) //when.Format(this.timeFormat) + " [" + msg.Level + "] " + "[" + msg.Path + "] " + msg.Content
-		} else {
-			msgStr = this.logConvert(when, msg)
-		}
+		//var msgStr string
+		//if this.logConvert == nil {
+		//	msgStr = defaultLogConvert(when, msg) //when.Format(this.timeFormat) + " [" + msg.Level + "] " + "[" + msg.Path + "] " + msg.Content
+		//} else {
+		//	msgStr = this.logConvert(when, msg)
+		//}
 
-		err := l.LogWrite(when, msgStr, level)
+		err := l.LogWrite(when, msg, level)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
 		}

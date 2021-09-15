@@ -32,7 +32,7 @@ func TestLogOut(t *testing.T) {
 	Error("this is Error")
 	Crit("this is Critical")
 	Alert("this is Alert")
-	Emer("this is Emergency")
+	Emer(nil, "this is Emergency")
 }
 
 func TestLogConfigReload(t *testing.T) {
@@ -67,7 +67,7 @@ func TestLogConfigReload(t *testing.T) {
 		Error("this is Error")
 		Crit("this is Critical")
 		Alert("this is Alert")
-		Emer("this is Emergency")
+		Emer(nil, "this is Emergency")
 		fmt.Println()
 
 		time.Sleep(time.Millisecond)

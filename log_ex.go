@@ -48,12 +48,26 @@ type LogMsgConvert func(t time.Time, l LogContent) string
 
 func defaultLogConvert(t time.Time, msg LogContent) string {
 
-	msgStr := t.Format(logTimeDefaultFormat) + " [" + msg.GetLevel() + "] " + "[" + msg.GetPath() + "] " + msg.GetContent()
+	msgStr := msg.GetTime() + " [" + msg.GetLevel() + "] " + "[" + msg.GetPath() + "] " + msg.GetContent()
 	return msgStr
 }
 
 func (this *LocalLogger) SetLogConvert(c LogMsgConvert) {
 	this.logConvert = c
+}
+
+func (this *LocalLogger) SetFileLogConvert(c LogMsgConvert) {
+	logger, ok := adapters[AdapterFile]
+	if ok {
+		logger.SetLogConvert(c)
+	}
+}
+
+func (this *LocalLogger) SetConsoleConvert(c LogMsgConvert) {
+	logger, ok := adapters[AdapterConsole]
+	if ok {
+		logger.SetLogConvert(c)
+	}
 }
 
 func (this *LocalLogger) SetAppName(name string) {
